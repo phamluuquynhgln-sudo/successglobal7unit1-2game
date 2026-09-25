@@ -1,0 +1,921 @@
+<!-- ══════ SỬA 1/4: TÊN GAME (title + hero h1 + tbSub) ══════ -->
+<title>Unit 1–2 Big Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900&display=swap">
+<style>
+/* ===== Hobbies Big Board — sân khấu game show, một giao diện duy nhất ===== */
+:root{
+  --curtain:#1b0f2b;      /* nền rèm sân khấu */
+  --stage:#2a1a42;        /* mặt bảng */
+  --stage-2:#372353;      /* mặt nổi */
+  --stage-3:#452c66;      /* ô chưa mở */
+  --line:rgba(247,242,231,.14);
+  --cream:#f7f2e7;
+  --dim:rgba(247,242,231,.62);
+  --dimmer:rgba(247,242,231,.34);
+  --gold:#f5cf6b;
+  --navy:#111c37;
+  --good:#5fd39a;
+  --bad:#ef5f6b;
+  --boom:#ff8a3d;
+  --f-show:'Bungee','Impact','Haettenschweiler',sans-serif;
+  --f-body:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:14px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--curtain); color:var(--cream);
+  font-family:var(--f-body); font-size:17px; line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(70% 42% at 18% -8%, rgba(245,207,107,.16), transparent 62%),
+    radial-gradient(70% 42% at 82% -8%, rgba(76,201,240,.13), transparent 62%),
+    radial-gradient(120% 60% at 50% 118%, rgba(255,93,143,.10), transparent 68%);
+}
+.wrap{position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:0 14px 30px}
+button{font-family:inherit}
+:focus-visible{outline:3px solid var(--gold); outline-offset:3px}
+
+#top{position:sticky; top:0; z-index:40}
+.brandstrip{
+  background:var(--navy); color:var(--gold);
+  font-family:var(--f-body); font-weight:800; font-size:12px;
+  letter-spacing:2.4px; text-transform:uppercase; text-align:center; padding:6px 10px;
+}
+.titlebar{
+  background:linear-gradient(180deg,#33205020,#1b0f2b), var(--stage);
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:9px 12px; flex-wrap:wrap;
+}
+.titlebar b{font-family:var(--f-show); font-size:clamp(15px,3vw,21px); font-weight:400; letter-spacing:.5px}
+.titlebar span{
+  font-weight:800; font-size:12px; letter-spacing:1.6px; text-transform:uppercase; color:var(--gold);
+  border:1px solid rgba(245,207,107,.42); border-radius:999px; padding:3px 10px;
+}
+.screen{display:none} .screen.on{display:block}
+
+/* ---------- chuẩn bị ---------- */
+.hero{text-align:center; padding:24px 0 4px}
+.hero h1{
+  font-family:var(--f-show); font-weight:400; margin:0; line-height:1.02;
+  font-size:clamp(34px,9vw,68px); text-wrap:balance;
+  color:var(--cream); text-shadow:0 4px 0 rgba(0,0,0,.35);
+}
+.hero h1 em{font-style:normal; color:var(--gold); display:block}
+.cbadge{
+  display:inline-block; margin:14px 0 4px; padding:6px 16px;
+  border:1.5px solid var(--gold); border-radius:999px;
+  font-weight:800; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--gold);
+}
+.hero p{color:var(--dim); max-width:58ch; margin:10px auto 0; font-size:15px}
+
+.setgrid{display:grid; gap:14px; grid-template-columns:1fr 1fr; margin:22px 0 0}
+@media(max-width:700px){.setgrid{grid-template-columns:1fr}}
+.card{background:var(--stage); border:1px solid var(--line); border-radius:var(--r); padding:16px}
+.lbl{font-weight:800; font-size:11px; letter-spacing:1.8px; text-transform:uppercase; color:var(--dimmer); display:block; margin-bottom:8px}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{
+  background:var(--curtain); border:1px solid var(--line); color:var(--dim);
+  border-radius:999px; padding:8px 16px; cursor:pointer; font-weight:700; font-size:14px;
+}
+.chip[aria-pressed="true"]{background:var(--gold); border-color:var(--gold); color:var(--navy)}
+#names{display:grid; gap:8px; grid-template-columns:1fr}
+#names[data-many="1"]{grid-template-columns:1fr 1fr}
+@media(max-width:520px){#names[data-many="1"]{grid-template-columns:1fr}}
+.namerow{display:flex; align-items:center; gap:10px}
+
+/* bộ tăng giảm số đội */
+.stepper{display:flex; align-items:center; gap:12px}
+.stepbtn{
+  width:46px; height:46px; flex:none; cursor:pointer; border-radius:12px;
+  background:var(--stage-2); border:1px solid var(--line); color:var(--cream);
+  font-family:var(--f-show); font-size:22px; line-height:1; display:grid; place-items:center;
+}
+.stepbtn:hover:not(:disabled){border-color:var(--gold); color:var(--gold)}
+.stepbtn:disabled{opacity:.3; cursor:not-allowed}
+.stepval{display:flex; align-items:baseline; gap:7px}
+.stepval b{font-family:var(--f-show); font-size:34px; color:var(--gold); font-variant-numeric:tabular-nums}
+.stepval small{font-weight:800; font-size:12px; letter-spacing:1.8px; text-transform:uppercase; color:var(--dimmer)}
+.swatches{display:flex; gap:5px; flex-wrap:wrap; margin-left:auto}
+.sw{width:16px; height:16px; border-radius:5px; background:var(--tc)}
+.tag{
+  flex:none; width:32px; height:32px; border-radius:9px; display:grid; place-items:center;
+  font-family:var(--f-show); font-size:15px; color:var(--navy); background:var(--tc,#888);
+}
+.tin{
+  flex:1; min-width:0; background:var(--curtain); border:1px solid var(--line); color:var(--cream);
+  border-radius:10px; padding:10px 13px; font-size:17px; font-family:var(--f-body); font-weight:700;
+}
+.tin:focus{border-color:var(--gold)}
+.hint{color:var(--dimmer); font-size:13px; margin:10px 0 0}
+.playbtn{
+  display:block; width:100%; margin:20px 0 0; cursor:pointer;
+  background:var(--gold); color:var(--navy); border:none; border-radius:var(--r);
+  font-family:var(--f-show); font-weight:400; font-size:clamp(19px,4.4vw,27px);
+  padding:18px 16px; letter-spacing:.5px; box-shadow:0 5px 0 #b8963f;
+}
+.playbtn:active{transform:translateY(3px); box-shadow:0 2px 0 #b8963f}
+.ghost{background:transparent; border:1px solid var(--line); color:var(--dim); border-radius:10px; padding:9px 14px; cursor:pointer; font-size:14px; font-weight:700}
+.ghost:hover{border-color:var(--gold); color:var(--gold)}
+
+/* ---------- bục điểm 4 đội ---------- */
+/* tự xuống dòng nên 2 đội hay 8 đội đều xếp gọn */
+.podiums{display:grid; gap:10px; margin:14px 0 0; grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}
+@media(max-width:640px){.podiums{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}}
+.podium{
+  background:var(--stage); border:1px solid var(--line); border-top:4px solid var(--tc);
+  border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; gap:2px;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.podium.on{box-shadow:0 0 0 2px var(--gold), 0 8px 22px rgba(0,0,0,.35); transform:translateY(-3px)}
+.podium .pt{display:flex; align-items:center; gap:8px}
+.podium .pname{font-weight:800; font-size:15px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.podium .pscore{font-family:var(--f-show); font-size:clamp(24px,4.6vw,34px); color:var(--tc); line-height:1.1; font-variant-numeric:tabular-nums}
+/* nhiều đội thì bục thấp lại, nhường chỗ cho bảng ô */
+#pods[data-many="1"] .podium{padding:7px 10px}
+#pods[data-many="1"] .podium .pscore{font-size:clamp(20px,3.2vw,26px)}
+#pods[data-many="1"] .podium .pmeta{display:none}
+.podium .pmeta{font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--dimmer)}
+.podium .tag{width:26px; height:26px; font-size:13px; border-radius:7px}
+
+.turnbar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  margin:16px 0 10px; padding:10px 14px; border-radius:12px;
+  background:var(--stage); border:1px solid var(--line); border-left:5px solid var(--tc,var(--gold));
+}
+.turnbar .t1{font-weight:800; font-size:12px; letter-spacing:1.8px; text-transform:uppercase; color:var(--dimmer)}
+.turnbar .t2{font-family:var(--f-show); font-size:clamp(18px,3.6vw,26px); color:var(--tc,var(--gold))}
+.turnbar .t3{font-size:13px; color:var(--dim); font-weight:700}
+
+/* ---------- bảng ô số ---------- */
+/* số cột và chiều cao hàng do JS tính → bảng 12 ô hay 36 ô đều vừa một khung chiếu */
+.board{
+  display:grid; gap:9px;
+  grid-template-columns:repeat(var(--cols,6),1fr);
+  grid-auto-rows:var(--rowh, clamp(52px, calc(56vh / var(--rows,4)), 112px));
+}
+@media(max-width:760px){.board{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:430px){.board{grid-template-columns:repeat(3,1fr)}}
+.tile{
+  cursor:pointer; border-radius:14px; border:1px solid rgba(247,242,231,.18);
+  background:linear-gradient(180deg,var(--stage-3),var(--stage-2)); color:var(--cream);
+  font-family:var(--f-show); font-size:clamp(20px,4.4vw,34px); font-weight:400;
+  display:grid; place-items:center; padding:0; line-height:1;
+  box-shadow:0 4px 0 rgba(0,0,0,.30); transition:transform .14s ease, filter .14s ease;
+}
+.tile:hover:not(:disabled){transform:translateY(-3px); filter:brightness(1.18)}
+.tile:active:not(:disabled){transform:translateY(1px)}
+.tile.taken{
+  background:var(--tc); color:var(--navy); border-color:rgba(0,0,0,.25);
+  box-shadow:0 3px 0 rgba(0,0,0,.28); cursor:default;
+}
+.tile.miss{background:#241634; color:var(--dimmer); border-style:dashed; box-shadow:none; cursor:default}
+.tile:disabled{cursor:default}
+.flipin{animation:flipin .42s ease-out}
+@keyframes flipin{0%{transform:rotateY(90deg) scale(.9)} 60%{transform:rotateY(-8deg) scale(1.04)} 100%{transform:rotateY(0) scale(1)}}
+.boardfoot{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px}
+.boardfoot .left{font-weight:800; font-size:12px; letter-spacing:1.4px; text-transform:uppercase; color:var(--dimmer)}
+
+/* ---------- câu hỏi ---------- */
+#ask{position:fixed; inset:0; z-index:60; display:none; flex-direction:column;
+  background:var(--curtain);
+  background-image:radial-gradient(100% 55% at 50% 0%, rgba(245,207,107,.10), transparent 65%);}
+#ask.on{display:flex}
+.tbar{height:6px; background:rgba(247,242,231,.10); flex:none}
+.tbar i{display:block; height:100%; background:var(--gold); width:100%}
+.tbar i.low{background:var(--bad)}
+.askin{flex:1; overflow-y:auto; padding:16px 16px 26px; max-width:840px; margin:0 auto; width:100%}
+.qhead{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+.qtile{font-family:var(--f-show); font-size:15px; padding:5px 13px; border-radius:9px; color:var(--navy); background:var(--tc,var(--gold))}
+.qteam{font-weight:800; font-size:13px; letter-spacing:1.4px; text-transform:uppercase; color:var(--dim)}
+.qlv{font-weight:800; font-size:11px; letter-spacing:1.4px; text-transform:uppercase; color:var(--dimmer); border:1px solid var(--line); border-radius:999px; padding:3px 10px}
+.qtext{font-size:clamp(20px,3.6vw,31px); font-weight:700; line-height:1.35; margin:0 0 18px; text-wrap:balance}
+.qtext u{text-decoration-color:var(--gold); text-underline-offset:4px}
+.opts{display:grid; gap:10px}
+.opt{
+  text-align:left; cursor:pointer; width:100%; background:var(--stage); border:1px solid var(--line);
+  color:var(--cream); border-radius:12px; padding:14px 16px;
+  font-size:clamp(16px,2.6vw,21px); font-weight:600; display:flex; align-items:center; gap:12px;
+  transition:background .12s, border-color .12s;
+}
+.opt:hover{background:var(--stage-2); border-color:var(--gold)}
+.opt b{font-family:var(--f-show); flex:none; width:30px; height:30px; border-radius:8px; background:rgba(247,242,231,.10); display:grid; place-items:center; font-size:13px; color:var(--dim)}
+.opt.right{background:rgba(95,211,154,.18); border-color:var(--good)}
+.opt.wrong{background:rgba(239,95,107,.18); border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.slot{min-height:62px; border:2px dashed var(--line); border-radius:12px; padding:9px; display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; margin-bottom:12px; background:rgba(0,0,0,.22)}
+.wchip{cursor:pointer; background:var(--stage-2); border:1px solid var(--line); color:var(--cream); border-radius:9px; padding:9px 13px; font-size:clamp(15px,2.4vw,19px); font-weight:600}
+.wchip:hover{border-color:var(--gold)}
+.wchip.used{opacity:.22; pointer-events:none}
+.bank{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px}
+.checkbtn{width:100%; cursor:pointer; background:var(--gold); color:var(--navy); border:none; border-radius:12px; padding:14px; font-family:var(--f-show); font-size:17px; letter-spacing:1px}
+.checkbtn:disabled{opacity:.4; cursor:not-allowed}
+
+/* ---------- kết quả & ô bất ngờ ---------- */
+.veil{position:fixed; inset:0; z-index:70; display:none; place-items:center; text-align:center; padding:24px; overflow-y:auto; background:var(--curtain)}
+.veil.on{display:grid}
+#flash{background-image:radial-gradient(90% 60% at 50% 42%, rgba(95,211,154,.16), transparent 70%); cursor:pointer}
+#flash.bad{background-image:radial-gradient(90% 60% at 50% 42%, rgba(239,95,107,.16), transparent 70%)}
+.big{font-family:var(--f-show); font-weight:400; line-height:1.04; font-size:clamp(34px,10vw,88px); color:var(--good); margin:0; padding:0 6px; text-wrap:balance; text-shadow:0 5px 0 rgba(0,0,0,.35)}
+#flash.bad .big{color:var(--bad)}
+.sub{font-weight:800; font-size:clamp(16px,3.4vw,24px); letter-spacing:1.4px; text-transform:uppercase; margin:12px 0 0; color:var(--cream)}
+.fix{margin:18px auto 0; max-width:60ch; font-size:clamp(15px,2.4vw,19px); background:var(--stage); border:1px solid var(--line); border-radius:12px; padding:13px 16px}
+.fix span{color:var(--good); font-weight:800}
+.tapnote{margin-top:18px; font-weight:800; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--dimmer)}
+
+#surprise .icon{font-size:clamp(52px,15vw,110px); line-height:1; animation:pop .45s ease-out}
+#surprise .big{color:var(--gold)}
+#surprise.boom .big{color:var(--boom)}
+@keyframes pop{0%{transform:scale(.4) rotate(-12deg); opacity:0} 65%{transform:scale(1.12) rotate(4deg)} 100%{transform:scale(1) rotate(0); opacity:1}}
+.picks{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:20px}
+.pick{
+  cursor:pointer; border:2px solid var(--tc); background:var(--stage); color:var(--cream);
+  border-radius:12px; padding:12px 18px; font-weight:800; font-size:17px; min-width:130px;
+}
+.pick:hover{background:var(--tc); color:var(--navy)}
+.pick small{display:block; font-weight:700; font-size:12px; color:var(--dim)}
+.pick:hover small{color:var(--navy)}
+.okbtn{margin-top:22px; cursor:pointer; background:var(--gold); color:var(--navy); border:none; border-radius:12px; padding:13px 30px; font-family:var(--f-show); font-size:17px}
+
+/* ---------- kết thúc ---------- */
+.rank{display:flex; flex-direction:column; gap:10px; margin-top:16px}
+.rrow{
+  display:flex; align-items:center; gap:12px; background:var(--stage);
+  border:1px solid var(--line); border-left:5px solid var(--tc); border-radius:12px; padding:12px 14px;
+}
+.rrow .pos{font-family:var(--f-show); font-size:22px; color:var(--dimmer); width:38px; flex:none}
+.rrow.first{box-shadow:0 0 0 2px var(--gold)}
+.rrow .rn{font-weight:800; font-size:18px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.rrow .rs{font-family:var(--f-show); font-size:26px; color:var(--tc); font-variant-numeric:tabular-nums}
+.rrow .rt{font-size:12px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--dimmer)}
+.endcard{background:var(--stage); border:1px solid var(--line); border-radius:var(--r); padding:16px; margin-top:16px; text-align:center}
+.endcard .crown{font-weight:800; letter-spacing:2.2px; text-transform:uppercase; font-size:12px; color:var(--gold); margin-top:10px}
+footer{text-align:center; color:var(--dimmer); font-size:12px; padding:22px 12px 8px; font-weight:800; letter-spacing:1.2px; text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){*,*::before{animation:none!important; transition:none!important}}
+</style>
+
+<div id="top">
+  <div class="brandstrip" id="strip1">👑 QUEEN ENGLISH CENTER</div>
+  <div class="titlebar"><b>🎪 UNIT 1–2 BIG BOARD</b><span id="tbSub">Unit 1–2 · Tiếng Anh 7</span></div>
+</div>
+
+<div class="wrap">
+
+<section id="setup" class="screen on">
+  <div class="hero">
+    <!-- SỬA 1/4: dòng dưới đổi theo chủ đề unit, chữ EN viết hoa cho hợp font Bungee -->
+    <h1>BIG BOARD<em>HOBBIES &amp; HEALTH</em></h1>
+    <div class="cbadge" id="badge1">Queen English Center</div>
+    <p>Chỉnh từ <b>2 đến 8 đội</b> tuỳ sĩ số lớp. Các đội thay phiên chọn ô số, trả lời đúng được <b>10 điểm</b> — nhưng vài ô giấu bất ngờ: nhân đôi, cướp điểm, đổi điểm, và <b>bom nổ mất sạch</b>.</p>
+  </div>
+
+  <div class="setgrid">
+    <div class="card">
+      <span class="lbl">Số đội — bấm − / + để chỉnh</span>
+      <div class="stepper">
+        <button class="stepbtn" id="tMinus" type="button" aria-label="Bớt một đội">−</button>
+        <div class="stepval"><b id="tVal">4</b><small>đội</small></div>
+        <button class="stepbtn" id="tPlus" type="button" aria-label="Thêm một đội">+</button>
+        <div class="swatches" id="sw"></div>
+      </div>
+      <span class="lbl" style="margin-top:16px">Tên các đội</span>
+      <div id="names"></div>
+    </div>
+    <div class="card">
+      <span class="lbl">Số ô trên bảng</span>
+      <div class="chips" id="nb"></div>
+      <p class="hint" id="tileHint"></p>
+      <span class="lbl" style="margin-top:16px">Đồng hồ 30 giây</span>
+      <div class="chips" id="tm"></div>
+      <p class="hint" id="soundHint">Bấm thử loa trước khi vào lớp.</p>
+      <button class="ghost" id="btnSound" type="button">🔊 Kiểm tra âm thanh</button>
+    </div>
+  </div>
+
+  <button class="playbtn" id="btnStart" type="button">🎪 MỞ BẢNG!</button>
+  <p class="hint" style="text-align:center">Chạm nút này để mở khoá âm thanh trên máy.</p>
+</section>
+
+<section id="game" class="screen">
+  <div class="podiums" id="pods"></div>
+  <div class="turnbar" id="turnbar">
+    <div><div class="t1">Tới lượt</div><div class="t2" id="whoName">Đội A</div></div>
+    <div class="t3" id="turnHint">Chọn một ô số bất kỳ</div>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="boardfoot">
+    <span class="left" id="leftInfo"></span>
+    <button class="ghost" id="btnEnd" type="button">Kết thúc & xem bảng xếp hạng</button>
+  </div>
+</section>
+
+<section id="end" class="screen">
+  <div class="hero" style="padding-bottom:0">
+    <div class="cbadge" style="border-color:var(--line); color:var(--dim)">Kết quả</div>
+    <h1 style="font-size:clamp(28px,7vw,52px)" id="champ">—</h1>
+  </div>
+  <div class="rank" id="rank"></div>
+  <div class="endcard">
+    <div id="endStats" style="font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--dim); font-size:13px"></div>
+    <div class="crown" id="badge2">👑 Queen English Center · Unit 1–2</div>
+    <div style="margin-top:14px"><button class="ghost" id="btnAgain" type="button">Chơi ván mới</button></div>
+  </div>
+</section>
+
+<footer id="foot">👑 Queen English Center · Unit 1–2 · Tiếng Anh 7</footer>
+</div>
+
+<div id="ask" role="dialog" aria-modal="true" aria-label="Câu hỏi">
+  <div class="tbar"><i id="tfill"></i></div>
+  <div class="askin">
+    <div class="qhead"><span class="qtile" id="qtile">1</span><span class="qteam" id="qteam"></span><span class="qlv" id="qlv"></span></div>
+    <p class="qtext" id="qtext"></p>
+    <div id="qbody"></div>
+  </div>
+</div>
+
+<div id="flash" class="veil"><div>
+  <p class="big" id="fBig">+10</p>
+  <p class="sub" id="fSub"></p>
+  <div class="fix" id="fFix" hidden></div>
+  <p class="tapnote">Chạm để tiếp tục</p>
+</div></div>
+
+<div id="surprise" class="veil"><div>
+  <div class="icon" id="sIcon">🎁</div>
+  <p class="big" id="sBig">BONUS</p>
+  <p class="sub" id="sSub"></p>
+  <div id="sPick"></div>
+</div></div>
+
+<script id="fxdata" type="application/json">{"fx_silent": "//tQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UsRdg8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tSxKGDwAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+1LEoYPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UsShg8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV", "fx_hit": "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", "fx_out": "//tQxAAAB0Aw+HT0gCHZEOJDP6AAKfttmFzMtuIIGoCQCGHAb4OQWBSkHIWtpw0HQUJIrt6IHeH1Or9C38XB//7fKAh/t///g+/ygIf+HzAjwsIxBIKYMR9W1jUFgdMwGtVcNAIDqTAqwQswY4EQMJaA/jA3gUswNwDWC4AEYD8AIAIALMD2AsTAbgCtZ7+HMaGcFGCHmMIyq+jQuxYQyRVG5S7n+0xicX69bhNecr//43T27HKt6tVpf///8MOd+zFj3fvVMCqCqDLQzewyjP/7UsQFA8h4HQId8AAAtoNgwf7kSD6eNyLZyzN9h50wyQAfMDNBLDBYQO4wBkBJMArABTAVgE8HAGrxdEA02QSi5n//6f////////9P2aTCGBCcyx9ynP5HXZjOXybQ6XjszmQQxpJkw+F48/TfVA2AsO8gFDFjP/9///2KMNZEejSlPd0+4kpHMmZI7zJnwDLCAzF1NjAouTPYDcCBsENOVagTIlgXDC11I0ft///o/b/////9piOYywYycycnkLX4p/armyZEWHoGFgA5J219//tSxCoDxywbAA/3QkD1g+AB/miAGxDuAywMRmjRGSDprZUodaMUGmKV/53/////+v////W/7q40tKw92NI0tGNDP47aqDCqwQ0wOoBePuvOIeNObMWNLKLvlnS9nSmD6gFplLDysfSsdxmTLhgJqIEPmIKHAdLiY1sISI0HGhqXUChseASKFs//d//////////urjBuA+EwnX5wMfIGqDBEhUIwOnMwPVgUNMwIIA08c1I0aoFYtq2Jl5IMNmv/q////1f/////UYZgFymXLxD/+1LETIPE1B0EDv9AaNSDYIH/aEDh/l5U2agAJ9GmibyYSAwBjOuYk9GRoZkYWLJBMNqeJGDS2pnEXf7///s///////31NFB/PHUuNCeW5z+4kew6i9PnOjcg0edgMUCACTtcKlUef/////////////7jBnBTIxu96NP21sNz/xnOUxnQUEMJ5COzsFWN5u01stDOBmMqi8xEBEg72At7JkIkaSNf9P//1bPp///2/6Pl9H07/oUwScNIM8L6KztoiCEx0AcfMJcOMN2nMMkEMP/7UsR8g8a0HQQP90JA3wNgQf9sQPSlORmN4kBW8iUMX4KOD6ZpWr/X////r///3//6xEGumWFPBJ+si+wZqITi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IQeZNpktH/2GU4EicNNHhv/7UsTcA8eAIvQP+2IA4QOeQf7kSF0l7WfbupjGMGAIBgooCKeMgHBnZqh4Y8UGEiKQlCfEx+9Si2z/d//////X/3/1/ur/dX9SMFQDvTDNRqIwDHmXOj4KHTLfhTswvMHkOOVE2OmAxOkRyMOCEweGgcJGooZl423ZQkW27oLsHQvgmO6EDcd2iQTKmZn52ZxsHjja9+Fe/ixzr367/ggNBwThYEC4YB8cGBIND4gOAgs+IFHC7Tmn26P///8l9GSMPgeo22X9AtZifm2L5rIC//tSxNkDxuQc9A/zJEDeg14B/2wIRGKCJmYagkhiggGGXNxh0EbaHGGiQgGTICEBFI6BGGhwKEltGAggOAmtlwS7LqJfIPQlgSYzzOiqV1YCYc7qQEgqbEERXByElEShKVHIknqYknsBkfXMT2hye8uPo2T11la7i57Vq3WVvNLvqttq13GrazZKKCko2KSCoxwLkNCmxUI4KxNCuDYrhmRwLw3LoqC4bibF87HxWT5umwvNx+XtTEFNRVWABAApgYInwso0hliyC3jEFJE2GCP/+1LE1IPFLBruD/NCAPEDXIHv7Ai4e47CRj4J+d6QXK6X1wp1IAycPUs8XUs7XDtRpxpRZh5jCwsLCwqKisUFhYW+gVZ/+oWFlUxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UsT/g87odN4P8YVCxZkbAe2w+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tSxMaDyShueKe8w8AAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=", "fx_run": "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3/T996DvX/7OptQnNHPR///7UsSJgQlsXxIPbE5BLgvjJe2JyGev/1ea6v39df///Okl8hbqmQFQCzAEAmMCMHMwmCnDQ+bDMJoJgwMwOTGxUyoQOhCBYrbyfsZk036afBDf3Ny3Dno/6dHobo7td6P9v+z6v0RgAcQhO8P3+rtBKYdc5WgiCyZEOTYDYzKMMMMA0wJgBgIUF1yclo02ERHrTTQXIfodS3r/r/nP/9H19hNSli9OVV3f+pWSAEAKRlpgEmlqmAoi+zcRkAARKniCcAhS/1K5S6YTacnZXVkP//tSxJwACJhhEA56jAD+jCQ0HpSo2d3vYJrb6HP9v/+z6K/bV//2QAAAoFmqsXyhmE52AGDRGYqLRsi7mZCAXvAwDLWGGQUzcCSM0iU9pfxi9dLVp//rGV2W0frZqr5T4qp7ZL/lv0U/i/Qu5UxBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/Va134jLVhaBK5BUtWao5mIRR5bkaRMmrAAAUMs84B5hwaLdaNSmzz5jG/T/+1LEt4EJFGEQD2xOQRKF4rG/ZYB0AiAT6lKX//+jhWBqHcKnTuu9qxvBq3CgdKnSzhESqgrBpwd29frATyrtYaYs6DR5QNCWG0xBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7UsTOgAbkLyGgj4YhFZNh4C4U4FVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tSxNIDzCCa+A3kToAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVU=", "fx_hr": "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", "fx_boom": "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VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//tSxOyDCsAo2C/7YAGYohfF/gi5VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+1LEoYPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==", "fx_tick": "//tQxAAACgxHOFWMgAGDladHOVAAApaGds7Z2ztnbO3Lf9/3IchhigCEguQlYrObZnZYdUhtJGQAgoxByHchyX08bjcbl9PbBwEAQBB0Tg/wQdOcu/Lu6fd0/dUAz+TBDgM/wx0gQAI3Fpv//MCg4LAfWX3DCAHEbhpQLI2ZhSQgbWLYGJAeBisThZUBvkIhe4DAwJDkgxURHJHDIw5IskVr/kOHOHOJkiv/kVMi8TRiXf/yKmReLxiXS7/LA0JQkDX/Ep0GlTAAAABAQKd/f//7UsQEgQqwOxOd7wABUA3hofyWCPcl0y/LKXVBoDRgWgPCQBxgWBTmIIIqYjgu5inK1HzLPEZ+5KhjDhnGBOA2YFQFpgUAIrkRWTCZzDpmz3+g90dtN/29H+v2f6v9D/6ygMA7+v5+F+zKXwZ+mQKgA4WAHACAimAaATBgspKsalcHgGGNAi5gd4EAYDcAhn3Ebx5lgIDXujsNS3v06+v+FP6Pf/nuW1rb/Wzp7Ue3/+ln636lUIAAADAir/d/zdSvhTtYTHLSGlZ88YIYJ5hQ//tSxA2BCqxxD4x4TIGXFyDB7BYIBuGUedubBTzZgahfGA4BuYBICAEABSGYa/wUwl2r10XduvwTf+u/yqt4v1X5HqN7I/VZq0+z5FNd/R/4/zP7F+s+7AEMwoAMBQGTAKA2MEcG8yJnXT0nYSMdME4wegMzAzAYOyQM5AavaQXKXLWi6d1aioeWZDCqJ+Sbfo6v36fhpGxIU4CZp3yB+eCMzo508utJmuSuUnmxyiaj4YKe1qqtk61BQmWOKy6BVGxgEDA0KTEgOjLsHzcyFTH/+1LEDYMMuHEAA3THgTYL14j8JdAqFzgwnzJsYDCwNQqCDM6FxG/fqOxiRAEUmidGotaLfPr5rtuAoSRkrVuXkhEe6gVOiKT5UOlodJ+LA1iH+RtPVBIOln9X53nXp6SEAJXPXzKhxfS7GaVBmHOjFVKyopHhWgAYhMQjRMU3ZwzNbCqajbCG5uABsSE6BdcgNmWkKIqWSsEzNRI0FRUWJf/////////+KigtxapMQU1FMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqg=="}</script>
+<script>
+/* ==========================================================
+   HOBBIES BIG BOARD — mode classic, tối đa 4 đội
+   Unit 1 Hobbies · Tiếng Anh 7 (Global Success)
+   Queen English Center
+   ========================================================== */
+/* ══════ SỬA 2/4: TÊN UNIT — CENTER giữ nguyên, không đổi ══════ */
+const CENTER = "QUEEN ENGLISH CENTER";
+const UNIT   = "Unit 1 Hobbies & Unit 2 Healthy Living · Tiếng Anh 7";
+const $ = id => document.getElementById(id);
+$('strip1').textContent = '👑 ' + CENTER;
+$('badge1').textContent = CENTER;
+$('badge2').textContent = '👑 ' + CENTER + ' · ' + UNIT;
+$('foot').textContent   = '👑 ' + CENTER + ' · ' + UNIT;
+
+/* ---------- ÂM THANH: MP3 qua thẻ <audio>, mở khoá bằng cú chạm thật ---------- */
+const FX = JSON.parse($('fxdata').textContent), URLS = {};
+for (const k in FX){
+  const bin = atob(FX[k]); const buf = new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) buf[i] = bin.charCodeAt(i);
+  URLS[k] = URL.createObjectURL(new Blob([buf], {type:'audio/mpeg'}));
+}
+const AU = [new Audio(), new Audio()];
+AU.forEach(a=>{ a.preload='auto'; a.playsInline=true; });
+let auTurn = 0, unlocked = false;
+function unlock(){ AU.forEach(a=>{ a.src=URLS.fx_silent; const p=a.play(); if(p) p.catch(()=>{}); }); unlocked = true; }
+function play(n){
+  if(!URLS[n]) return;
+  const a = AU[auTurn]; auTurn = 1 - auTurn;
+  try{ a.src = URLS[n]; a.currentTime = 0; const p = a.play(); if(p) p.catch(()=>{}); }catch(e){}
+}
+['touchend','click'].forEach(ev=>document.addEventListener(ev,()=>{ if(!unlocked) unlock(); },{passive:true}));
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && unlocked) unlock(); });
+if(/iPhone|iPad|iPod/.test(navigator.userAgent)){
+  $('soundHint').innerHTML = 'iPhone/iPad: nhớ <b>gạt nút chuông sang bật</b> thì mới nghe được tiếng.';
+}
+$('btnSound').addEventListener('click',()=>{ unlock(); setTimeout(()=>play('fx_run'),140); });
+
+/* ══════════════════════════════════════════════════════════════════
+   SỬA 3/4: NGÂN HÀNG CÂU HỎI — CHỖ DUY NHẤT CẦN VIẾT LẠI CHO UNIT MỚI
+   · Giữ đúng 4 nhãn "Dễ" / "Khá" / "Khó" / "Rất khó".
+   · Trắc nghiệm: {q:"...", o:["đúng","sai","sai"], c:0} — LUÔN để đáp án
+     đúng đứng đầu và c:0; engine tự xáo thứ tự khi hiển thị.
+   · Sắp xếp câu: {t:"order", w:["Cụm 1","cụm 2","cụm 3."]} — mỗi phần tử
+     là một cụm học sinh kéo, không tách từng từ lẻ.
+   · Trong q dùng được <u>gạch chân</u>, <i>nghiêng</i>, <br>.
+   · TỐI THIỂU 36 câu (đủ bảng lớn nhất không lặp); nên 70+ câu.
+   ══════════════════════════════════════════════════════════════════ */
+const BANK = {
+  "Dễ": [
+    {"q":"I have a lot of coins from different countries. My hobby is ___.","o":["collecting coins","collecting stamps","making models"],"c":0},
+    {"q":"She loves judo and goes to the judo club every weekend. Her hobby is ___.","o":["doing judo","doing yoga","playing football"],"c":0},
+    {"q":"He loves making models of small cars and planes. His hobby is ___.","o":["making models","building dollhouses","collecting dolls"],"c":0},
+    {"q":"My sister spends one hour in the garden every day. Her hobby is ___.","o":["gardening","camping","jogging"],"c":0},
+    {"q":"Minh plays football with his friends every day. His hobby is ___.","o":["playing football","doing judo","swimming"],"c":0},
+    {"q":"Which word goes with <u>GO</u>?","o":["jogging","judo","coins"],"c":0},
+    {"q":"Which word goes with <u>DO</u>?","o":["yoga","swimming","dolls"],"c":0},
+    {"q":"Which word goes with <u>COLLECT</u>?","o":["stamps","jogging","gardening"],"c":0},
+    {"q":"Trang uses cardboard and glue to build her ___.","o":["dollhouse","model plane","garden"],"c":0},
+    {"q":"Which group does <u>gardening</u> belong to?","o":["doing things","making things","collecting things"],"c":0},
+    {"q":"Which group does <u>building dollhouses</u> belong to?","o":["making things","collecting things","doing things"],"c":0},
+    {"q":"Which group does <u>collecting teddy bears</u> belong to?","o":["collecting things","doing things","learning things"],"c":0},
+    {"q":"Ann's hobby is ___.","o":["horse riding","gardening","cooking"],"c":0},
+    {"q":"<u>outdoor</u> = ?","o":["happening outside","very helpful","a very developed form"],"c":0},
+    {"q":"<u>patient</u> = ?","o":["able to wait for a long time","happening outside","very helpful"],"c":0},
+    {"q":"<u>valuable</u> = ?","o":["very helpful","happening outside","able to wait for a long time"],"c":0},
+    {"q":"<u>maturity</u> = ?","o":["a very developed form","the duty of taking care of something","very helpful"],"c":0},
+    {"q":"<u>responsibility</u> = ?","o":["the duty of taking care of something","a very developed form","happening outside"],"c":0},
+    {"q":"Before going to the beach, you should put ___ on your skin.","o":["suncream","lip balm","eyedrops"],"c":0},
+    {"q":"My lips are dry and cracked. I have ___.","o":["chapped lips","red spots","acne"],"c":0},
+    {"q":"I stayed in the sun for three hours without a hat. Now I have ___.","o":["sunburn","the flu","chapped lips"],"c":0},
+    {"q":"My eyes are tired and red. I need some ___.","o":["eyedrops","lip balm","suncream"],"c":0},
+    {"q":"Small red spots on a teenager's face — this problem is called ___.","o":["acne","sunburn","the flu"],"c":0},
+    {"q":"I have a runny nose, a cough and a high temperature. I have ___.","o":["the flu","acne","sunburn"],"c":0},
+    {"q":"Mum puts rice, meat and vegetables in my ___ every morning.","o":["lunch box","suncream","lip balm"],"c":0},
+    {"q":"Rowing a small boat on the lake is called ___.","o":["boating","cycling","exercise"],"c":0},
+    {"q":"Riding a bike in the countryside is called ___.","o":["cycling","boating","horse riding"],"c":0},
+    {"q":"<u>fit</u> = ?","o":["khoẻ mạnh, dẻo dai","lành mạnh","béo tốt"],"c":0},
+    {"q":"<u>active</u> = ?","o":["năng động","lười biếng","mệt mỏi"],"c":0},
+    {"q":"<u>avoid</u> = ?","o":["tránh, tránh xa","ảnh hưởng đến","thêm vào"],"c":0},
+    {"q":"<u>affect</u> = ?","o":["ảnh hưởng đến","tránh xa","chữa khỏi"],"c":0},
+    {"q":"<u>dim light</u> = ?","o":["ánh sáng yếu, thiếu sáng","ánh sáng chói","đèn pha ô tô"],"c":0},
+    {"q":"<u>put on weight</u> = ?","o":["tăng cân","giảm cân","cao lên"],"c":0},
+    {"q":"<u>fresh air</u> = ?","o":["không khí trong lành","gió mạnh","trời nắng to"],"c":0},
+    {"q":"<u>skin condition</u> = ?","o":["tình trạng da","bệnh về mắt","kiểu tóc"],"c":0},
+    {"q":"Which food is made from soya beans?","o":["tofu","fast food","soft drinks"],"c":0},
+    {"q":"Which one is <u>BAD</u> for your health?","o":["soft drinks","coloured vegetables","tofu"],"c":0},
+    {"q":"Which one is <u>GOOD</u> for your health?","o":["coloured vegetables","fast food","soft drinks"],"c":0},
+    {"q":"Which group does <u>the flu</u> belong to?","o":["health problems","outdoor activities","food and drink"],"c":0},
+    {"q":"Which group does <u>boating</u> belong to?","o":["outdoor activities","health problems","food and drink"],"c":0},
+    {"q":"Which group does <u>tofu</u> belong to?","o":["food and drink","health problems","outdoor activities"],"c":0},
+    {"q":"We take ___ C when we have a cold.","o":["vitamin","suncream","eyedrops"],"c":0},
+    {"q":"Which one is a <u>hobby</u>, and also keeps you fit?","o":["cycling","acne","suncream"],"c":0},
+    {"q":"Which word goes with <u>GO</u>?","o":["cycling","yoga","models"],"c":0}
+  ],
+  "Khá": [
+    {"q":"My dad has a big bookshelf because he loves ___ old books.","o":["collecting","collect","to collecting"],"c":0},
+    {"q":"My sister likes ___ camping at the weekend.","o":["going","go","to going"],"c":0},
+    {"q":"My best friend hates ___ computer games.","o":["playing","play","plays"],"c":0},
+    {"q":"Does your brother like ___ models?","o":["making","makes","made"],"c":0},
+    {"q":"My mum enjoys ___ yoga every day to keep fit.","o":["doing","does","to doing"],"c":0},
+    {"q":"I like ___. I work in the garden every afternoon.","o":["gardening","garden","to garden"],"c":0},
+    {"q":"She hates ___ TV.","o":["watching","watch","to watching"],"c":0},
+    {"q":"Which sentence is correct?","o":["She enjoys swimming.","She enjoys to swim.","She enjoys swim."],"c":0},
+    {"q":"Ann: No, I don't. I'm not interested ___ art.","o":["in","on","at"],"c":0},
+    {"q":"Mi: Do you like reading books?<br>Ann: ___, especially books about science.","o":["Yes, very much","No, I don't","I'm not interested"],"c":0},
+    {"q":"Which verb is <u>NOT</u> a verb of liking or disliking?","o":["learn","enjoy","hate"],"c":0},
+    {"q":"Mark ___ playing sport. He plays football every day.","o":["enjoys","enjoy","enjoying"],"c":0},
+    {"q":"I ___ playing sport. I prefer reading books.","o":["don't like","doesn't like","not like"],"c":0},
+    {"q":"My cousin likes ___ up early.","o":["getting","get","to getting"],"c":0},
+    {"q":"Mi loves drawing. She can spend hours ___ pictures every day.","o":["drawing","draw","drew"],"c":0},
+    {"q":"Your eyes are tired. You should ___ eyedrops.","o":["use","to use","using"],"c":0},
+    {"q":"You shouldn't ___ your face with dirty hands.","o":["touch","to touch","touching"],"c":0},
+    {"q":"You should ___ to bed early to have good skin.","o":["go","to go","going"],"c":0},
+    {"q":"You can ___ a hat and use suncream at the beach.","o":["wear","to wear","wearing"],"c":0},
+    {"q":"Coloured vegetables are good ___ your health.","o":["for","to","with"],"c":0},
+    {"q":"Soft drinks are bad ___ your teeth.","o":["for","to","at"],"c":0},
+    {"q":"I'm putting ___ weight because I eat too much fast food.","o":["on","in","up"],"c":0},
+    {"q":"Which one is a <u>simple sentence</u> (câu đơn)?","o":["The Japanese work hard and exercise regularly.","The Japanese work hard, and they exercise regularly.","Because the Japanese work hard, they are healthy."],"c":0},
+    {"q":"A simple sentence has ___.","o":["one subject and one clause","two subjects and two clauses","no verb at all"],"c":0},
+    {"q":"Which sentence follows the pattern <u>S + V + O + adverb</u>?","o":["I read science books every weekend.","I read.","I read science books."],"c":0},
+    {"q":"Which sentence follows the pattern <u>S + V</u> only?","o":["My brother swims.","My brother swims every day.","My brother swims in the pool every day."],"c":0},
+    {"q":"Doctor: What's the matter?<br>Nam: ___","o":["I have acne.","I have an acne.","I have two acnes."],"c":0},
+    {"q":"My eyes ___ tired after three hours of homework.","o":["are","is","am"],"c":0},
+    {"q":"My skin ___ very dry in winter.","o":["is","are","be"],"c":0},
+    {"q":"Mi: My eyes are tired.<br>Mark: ___","o":["You can use eyedrops.","You can to use eyedrops.","You can using eyedrops."],"c":0},
+    {"q":"Nam: I drink soft drinks every day.<br>Lan: ___","o":["It's not good for your health.","It's not good to your health.","It's not good for your healthy."],"c":0},
+    {"q":"Reading in dim light may ___ your eyes.","o":["affect","effect","affects"],"c":0},
+    {"q":"Breakfast ___ us energy for the whole day.","o":["gives","give","giving"],"c":0},
+    {"q":"I ___ fast food because it is bad for me.","o":["avoid","avoids","avoiding"],"c":0},
+    {"q":"Which is correct?","o":["I eat a lot of fast food.","I eat many fast foods.","I eat much fast foods."],"c":0},
+    {"q":"Lan: I walk to school every day.<br>Mi: ___","o":["I think it's good for your health.","I think it's good for your healthy.","I think it's good to health."],"c":0},
+    {"q":"I enjoy ___ in the countryside. It gives me fresh air.","o":["cycling","cycle","to cycling"],"c":0},
+    {"q":"You shouldn't ___ too much fast food.","o":["eat","to eat","eating"],"c":0}
+  ],
+  "Khó": [
+    {"q":"My brother and I ___ a new model every month. <i>(make)</i>","o":["make","makes","making"],"c":0},
+    {"q":"What ___ Lan ___ in her free time?","o":["does / do","do / does","does / does"],"c":0},
+    {"q":"I ___ a drawing lesson every Tuesday. <i>(have)</i>","o":["have","has","having"],"c":0},
+    {"q":"Mark ___ doing judo. <i>(not like)</i>","o":["doesn't like","don't like","not likes"],"c":0},
+    {"q":"___ your English lesson ___ at 6 p.m.?","o":["Does / start","Do / start","Does / starts"],"c":0},
+    {"q":"He ___ two hours in our garden every day. <i>(spend)</i>","o":["spends","spend","spending"],"c":0},
+    {"q":"My mum and sister ___ gardening, but they love cooking. <i>(not like)</i>","o":["don't like","doesn't like","not like"],"c":0},
+    {"q":"Their cooking lesson ___ at 9 a.m. <i>(begin)</i>","o":["begins","begin","beginning"],"c":0},
+    {"q":"“The sun rises every morning.” This is ___.","o":["a general truth","a timetable","a regular action"],"c":0},
+    {"q":"“The train leaves at 10 a.m.” This is ___.","o":["a timetable","a general truth","a regular action"],"c":0},
+    {"q":"“We sometimes watch TV on Sundays.” This is ___.","o":["a regular action","a timetable","a general truth"],"c":0},
+    {"q":"“The Red River flows through Ha Noi.” This is ___.","o":["a general truth","a timetable","a regular action"],"c":0},
+    {"q":"“My yoga class starts at 6 a.m. every Tuesday.” This is ___.","o":["a timetable / programme","a general truth","something happening now"],"c":0},
+    {"q":"Which word has the sound <u>/ɜː/</u>?","o":["learn","yoga","collect"],"c":0},
+    {"q":"Which word has the sound <u>/ə/</u>?","o":["amazing","surf","work"],"c":0},
+    {"q":"Which word has the sound <u>/ɜː/</u>?","o":["thirteen","column","yoga"],"c":0},
+    {"q":"Which word has the sound <u>/ə/</u>?","o":["collect","learn","thirty"],"c":0},
+    {"q":"“My best friend has thi<u>r</u>ty pens.” The underlined part has the sound ___.","o":["/ɜː/","/ə/","/ɑː/"],"c":0},
+    {"q":"Negative form: “I do judo every Tuesday.”","o":["I don't do judo every Tuesday.","I doesn't do judo every Tuesday.","I not do judo every Tuesday."],"c":0},
+    {"q":"Question form: “They enjoy collecting stamps.”","o":["Do they enjoy collecting stamps?","Does they enjoy collecting stamps?","Do they enjoys collecting stamps?"],"c":0},
+    {"q":"Question form: “This river runs through my home town.”","o":["Does this river run through my home town?","Do this river run through my home town?","Does this river runs through my home town?"],"c":0},
+    {"q":"Negative form: “My brother loves making model cars.”","o":["My brother doesn't love making model cars.","My brother don't love making model cars.","My brother doesn't loves making model cars."],"c":0},
+    {"q":"My sister never ___ soft drinks. <i>(drink)</i>","o":["drinks","drink","drinking"],"c":0},
+    {"q":"Nam ___ exercise in the park every morning. <i>(do)</i>","o":["does","do","doing"],"c":0},
+    {"q":"His family ___ cycling in the countryside on Sundays. <i>(go)</i>","o":["goes","go","going"],"c":0},
+    {"q":"The Japanese ___ a lot of fish, vegetables and tofu. <i>(eat)</i>","o":["eat","eats","eating"],"c":0},
+    {"q":"Too much sun ___ our skin. <i>(affect)</i>","o":["affects","affect","affecting"],"c":0},
+    {"q":"___ you like tofu?","o":["Do","Does","Are"],"c":0},
+    {"q":"___ your brother eat breakfast every day?","o":["Does","Do","Is"],"c":0},
+    {"q":"How often ___ you do outdoor activities?","o":["do","does","are"],"c":0},
+    {"q":"Negative form: “She drinks soft drinks every day.”","o":["She doesn't drink soft drinks every day.","She don't drink soft drinks every day.","She doesn't drinks soft drinks every day."],"c":0},
+    {"q":"Negative form: “I eat fast food at the weekend.”","o":["I don't eat fast food at the weekend.","I doesn't eat fast food at the weekend.","I not eat fast food at the weekend."],"c":0},
+    {"q":"Question form: “Nam avoids fast food.”","o":["Does Nam avoid fast food?","Do Nam avoid fast food?","Does Nam avoids fast food?"],"c":0},
+    {"q":"Question form: “They bring a lunch box and suncream.”","o":["Do they bring a lunch box and suncream?","Does they bring a lunch box and suncream?","Do they brings a lunch box and suncream?"],"c":0},
+    {"q":"Which word has the sound <u>/v/</u>?","o":["vitamin","fit","food"],"c":0},
+    {"q":"Which word has the sound <u>/f/</u>?","o":["breakfast","avoid","active"],"c":0},
+    {"q":"Which word has the sound <u>/v/</u>?","o":["avoid","fresh","flu"],"c":0},
+    {"q":"Which word has the sound <u>/f/</u>?","o":["affect","vegetables","vitamin"],"c":0},
+    {"q":"Which word does <u>NOT</u> have the sound /f/?","o":["vitamin","fit","food"],"c":0},
+    {"q":"Which word does <u>NOT</u> have the sound /v/?","o":["fresh","active","avoid"],"c":0},
+    {"q":"acti<u>v</u>e — the underlined letter has the sound ___.","o":["/v/","/f/","/b/"],"c":0},
+    {"q":"break<u>f</u>ast — the underlined letter has the sound ___.","o":["/f/","/v/","/p/"],"c":0},
+    {"q":"Which is correct?","o":["I never go to bed late.","I go never to bed late.","I go to bed never late."],"c":0},
+    {"q":"She ___ eats breakfast — she is always in a hurry.","o":["rarely","rare","is rarely"],"c":0},
+    {"q":"Turn into ONE simple sentence: “The Japanese work hard, and they exercise regularly.”","o":["The Japanese work hard and exercise regularly.","The Japanese work hard and they exercise regularly.","The Japanese works hard and exercises regularly."],"c":0},
+    {"q":"Which sentence is correct?","o":["My hands are chapped.","My hands is chapped.","My hands are chap."],"c":0},
+    {"q":"My dad ___ jogging every morning to keep fit. <i>(go)</i>","o":["goes","go","going"],"c":0},
+    {"q":"Question form: “Mi likes gardening.”","o":["Does Mi like gardening?","Do Mi like gardening?","Does Mi likes gardening?"],"c":0}
+  ],
+  "Rất khó": [
+    {"t":"order","w":["The","sun","sets","in the west","every evening."]},
+    {"t":"order","w":["Do","Trang and Minh","play basketball","every day","after school?"]},
+    {"t":"order","w":["The flight","from Ho Chi Minh City","doesn't arrive","at 10:30."]},
+    {"t":"order","w":["Our science teacher","starts","our lessons","at 1 p.m.","on Fridays."]},
+    {"t":"order","w":["Do","you","make","a model","at the weekend?"]},
+    {"t":"order","w":["My mum and I","usually spend","an hour a day","in our garden."]},
+    {"t":"order","w":["Gardening","teaches children","about flowers,","fruits and vegetables."]},
+    {"t":"order","w":["My hobby","is","building dollhouses","and","making models."]},
+    {"q":"Gardening belongs to the group of ___.","o":["doing things","making things","learning things"],"c":0},
+    {"q":"When gardening, children learn to be patient and take on ___.","o":["responsibility","creativity","maturity"],"c":0},
+    {"q":"Besides flowers, fruits and vegetables, gardening teaches children about ___.","o":["insects and bugs","birds and fish","stars and planets"],"c":0},
+    {"q":"The author and her mother usually garden for ___ a day.","o":["an hour","two hours","half an hour"],"c":0},
+    {"q":"Which benefit matches <u>collecting stamps</u>?","o":["It helps you be more patient.","It makes you strong.","It develops your creativity."],"c":0},
+    {"q":"Which benefit matches <u>horse riding</u>?","o":["It makes you strong.","It helps your hands and eyes work well together.","It helps you be more patient."],"c":0},
+    {"q":"Which benefit matches <u>making models</u>?","o":["It helps your hands and eyes work well together.","It makes you strong.","It reduces stress."],"c":0},
+    {"q":"Ann's horse riding lesson starts at ___.","o":["8 a.m.","8 p.m.","9 a.m."],"c":0},
+    {"q":"True or False? “Trang needs help with building dollhouses.”","o":["False","True"],"c":0},
+    {"q":"How often does Ann go to the Riders' Club?","o":["Every Sunday.","Every Saturday.","Twice a week."],"c":0},
+    {"q":"What does Trang need to build her dollhouse?","o":["Cardboard and glue.","Wood and nails.","Paper and scissors."],"c":0},
+    {"q":"People divide hobbies into ___ big groups.","o":["four","three","five"],"c":0},
+    {"t":"order","w":["My family","often goes cycling","in the countryside","at the weekend."]},
+    {"t":"order","w":["You shouldn't","read books","in dim light."]},
+    {"t":"order","w":["Coloured vegetables","and tofu","are good","for your health."]},
+    {"t":"order","w":["Nam","does exercise","in the park","every morning."]},
+    {"t":"order","w":["Do you","often bring","a lunch box","to school?"]},
+    {"t":"order","w":["We should","wear a hat","and use suncream","in the sun."]},
+    {"t":"order","w":["The Japanese","work hard","and exercise","regularly."]},
+    {"t":"order","w":["My sister","doesn't drink","soft drinks","every day."]},
+    {"t":"order","w":["Reading in dim light","may affect","your eyes."]},
+    {"t":"order","w":["I avoid","fast food","because","it is bad for me."]},
+    {"q":"What does Nam do every morning?","o":["He does exercise in the park.","He goes cycling in the countryside.","He reads books in dim light."],"c":0},
+    {"q":"Why does nobody in Nam's family get sunburn?","o":["They bring suncream.","They stay at home all day.","They use lip balm."],"c":0},
+    {"q":"What did Nam have last month?","o":["Acne, with small red spots on his face.","Chapped lips.","The flu."],"c":0},
+    {"q":"Which two tips did the doctor give Nam?","o":["Go to bed early and don't touch your face with dirty hands.","Eat more fast food and drink soft drinks.","Read in dim light and go to bed late."],"c":0},
+    {"q":"Which food does Nam avoid?","o":["Fast food and soft drinks.","Tofu and vegetables.","Fish and rice."],"c":0},
+    {"q":"How does Nam feel now?","o":["He feels active all day.","He feels tired all day.","He gets sunburn every day."],"c":0},
+    {"q":"Why is breakfast important?","o":["It gives us energy for the day.","It makes our skin dry.","It helps us put on weight."],"c":0},
+    {"q":"What should you do when your eyes are tired?","o":["Use eyedrops and stop reading in dim light.","Use lip balm and suncream.","Eat more fast food."],"c":0},
+    {"q":"What do the Japanese eat a lot of?","o":["Fish, vegetables and tofu.","Fast food and soft drinks.","Cakes and sweets."],"c":0},
+    {"q":"Why do we use suncream?","o":["To avoid sunburn.","To avoid chapped lips.","To avoid the flu."],"c":0},
+    {"q":"Which habit helps you keep fit?","o":["Doing outdoor activities every day.","Watching TV all afternoon.","Drinking soft drinks with every meal."],"c":0},
+    {"q":"Which habit can make you put on weight?","o":["Eating fast food every day.","Cycling to school every day.","Eating coloured vegetables."],"c":0},
+    {"t":"order","w":["Doing judo","is","good for","your health."]},
+    {"t":"order","w":["My brother","enjoys","cycling","in the countryside."]}
+  ]
+};
+/* ══════════════ HẾT NGÂN HÀNG CÂU HỎI ══════════════ */
+const ALLQ = [];
+for(const lv in BANK) BANK[lv].forEach(q => ALLQ.push({...q, lv}));
+
+/* ---------- Ô BẤT NGỜ ---------- */
+const SUR = {
+  x2:    {icon:'✖️',  en:'DOUBLE!',  vi:'Câu này ăn gấp đôi — cộng thêm 10 điểm nữa!', snd:'fx_hr'},
+  bonus: {icon:'🎁',  en:'BONUS +20',vi:'Quà tặng: cộng thẳng 20 điểm!',               snd:'fx_hr'},
+  bomb:  {icon:'💣',  en:'BOOM!',    vi:'Ô bom! Điểm của đội về 0.',                    snd:'fx_boom'},
+  swap:  {icon:'🔄',  en:'SWAP',     vi:'Đổi toàn bộ điểm với một đội bạn chọn.',       snd:'fx_run', pick:true},
+  steal: {icon:'🥷',  en:'STEAL 15', vi:'Lấy 15 điểm của một đội bạn chọn.',            snd:'fx_run', pick:true},
+  again: {icon:'🎯',  en:'GO AGAIN', vi:'Đội được chọn thêm một ô nữa!',                snd:'fx_run'}
+};
+const SPACK = ['x2','bonus','bomb','swap','x2','steal','bonus','again','bomb','swap'];
+
+/* ══════ SỬA 4/4 (tuỳ chọn): thêm màu vào đây là tăng được số đội tối đa ══════
+   8 màu tách bạch; chữ cái đội luôn hiện kèm nên không bao giờ phải
+   phân biệt bằng riêng màu — giữ nguyên nguyên tắc này khi thêm màu. */
+const PALETTE = [
+  {k:'A', c:'#4cc9f0', n:'Đội A'},
+  {k:'B', c:'#ff5d8f', n:'Đội B'},
+  {k:'C', c:'#8be07a', n:'Đội C'},
+  {k:'D', c:'#ffa552', n:'Đội D'},
+  {k:'E', c:'#b39cff', n:'Đội E'},
+  {k:'F', c:'#4de0c0', n:'Đội F'},
+  {k:'G', c:'#ff7a6b', n:'Đội G'},
+  {k:'H', c:'#e8d44d', n:'Đội H'}
+];
+const MIN_TEAMS = 2, MAX_TEAMS = PALETTE.length;
+
+/* ---------- TRẠNG THÁI ---------- */
+let S = null, curr = null, tId = null;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function newGame(nTeams, nTiles, timer, names){
+  const pool = shuffle(ALLQ.slice());
+  /* ~42% số ô có bất ngờ; bảng to hơn 10 ô thì lặp lại gói cho đủ */
+  const need = Math.max(2, Math.round(nTiles * 0.42)), sur = [];
+  while(sur.length < need) sur.push(...shuffle(SPACK.slice()));
+  sur.length = need;
+  const slots = shuffle(Array.from({length:nTiles}, (_,i)=>i)).slice(0, sur.length);
+  const tiles = Array.from({length:nTiles}, (_,i)=>({
+    n:i+1, q:pool[i % pool.length], sur:null, taken:null
+  }));
+  slots.forEach((sl,i)=> tiles[sl].sur = sur[i]);
+  S = {
+    nTeams, nTiles, timer, turn:0, busy:false, asked:0,
+    teams: names.map((n,i)=>({name:n, score:0, tiles:0, ...PALETTE[i]})),
+    tiles
+  };
+}
+
+/* ---------- VẼ ---------- */
+function drawPods(){
+  $('pods').dataset.many = S.nTeams > 4 ? '1' : '0';
+  $('pods').innerHTML = S.teams.map((t,i)=>`
+    <div class="podium ${i===S.turn?'on':''}" style="--tc:${t.c}">
+      <div class="pt"><span class="tag" style="--tc:${t.c}">${t.k}</span>
+        <span class="pname">${esc(t.name)}</span></div>
+      <div class="pscore">${t.score}</div>
+      <div class="pmeta">${t.tiles} ô đã mở</div>
+    </div>`).join('');
+  const me = S.teams[S.turn];
+  $('turnbar').style.setProperty('--tc', me.c);
+  $('whoName').textContent = me.name;
+}
+const colsFor = n => n <= 16 ? 4 : (n <= 20 ? 5 : 6);
+function drawBoard(){
+  const b = $('board');
+  const cols = colsFor(S.nTiles);
+  b.style.setProperty('--cols', cols);
+  b.style.setProperty('--rows', Math.ceil(S.nTiles / cols));
+  b.innerHTML = S.tiles.map((t,i)=>{
+    if(t.taken === null) return `<button class="tile" data-i="${i}" type="button">${t.n}</button>`;
+    if(t.taken === -1)   return `<button class="tile miss" data-i="${i}" type="button" disabled>✕</button>`;
+    const tm = S.teams[t.taken];
+    return `<button class="tile taken" data-i="${i}" type="button" disabled style="--tc:${tm.c}">${tm.k}</button>`;
+  }).join('');
+  b.querySelectorAll('.tile:not(:disabled)').forEach(el=>
+    el.addEventListener('click',()=>{ if(!S.busy) openTile(+el.dataset.i); }));
+  const left = S.tiles.filter(t=>t.taken===null).length;
+  $('leftInfo').textContent = `Còn ${left}/${S.nTiles} ô · đã hỏi ${S.asked} câu`;
+  requestAnimationFrame(fitBoard);
+}
+/* đo chỗ trống thật còn lại dưới bục điểm rồi chia đều cho các hàng ô,
+   để bảng luôn nằm gọn trong một khung chiếu dù 2 đội hay 8 đội */
+function fitBoard(){
+  if(!S) return;
+  const b = $('board');
+  const w = window.innerWidth;
+  const cols = w <= 430 ? 3 : (w <= 760 ? 4 : colsFor(S.nTiles));
+  const rows = Math.ceil(S.nTiles / cols);
+  const top  = b.getBoundingClientRect().top + window.scrollY;
+  /* đo thật phần nằm dưới bảng thay vì đoán: dòng "còn n ô", nút kết thúc, chân trang */
+  const below = (document.querySelector('.boardfoot')?.offsetHeight || 0)
+              + ($('foot')?.offsetHeight || 0) + 48;
+  const avail = window.innerHeight - top - below;
+  const h = Math.max(46, Math.min(112, (avail - (rows - 1) * 9) / rows));
+  b.style.setProperty('--rowh', Math.round(h) + 'px');
+}
+addEventListener('resize', fitBoard);
+function refresh(){ drawPods(); drawBoard(); }
+
+/* ---------- MỞ Ô ---------- */
+function openTile(i){
+  S.busy = true;
+  const t = S.tiles[i]; const me = S.teams[S.turn];
+  curr = {i, t};
+  S.asked++;
+  play('fx_tick');
+  $('qtile').textContent = 'Ô ' + t.n;
+  $('qtile').style.setProperty('--tc', me.c);
+  $('qteam').textContent = me.name;
+  $('qlv').textContent = t.q.lv;
+  if(t.q.t === 'order') renderOrder(t.q); else renderMC(t.q);
+  $('ask').classList.add('on');
+  startTimer(t.q.lv === 'Rất khó' ? 45 : 30);
+}
+function renderMC(q){
+  $('qtext').innerHTML = q.q;
+  const idx = shuffle(q.o.map((_,i)=>i)), L = 'ABCD';
+  $('qbody').innerHTML = '<div class="opts">' + idx.map((oi,n)=>
+    `<button class="opt" type="button" data-oi="${oi}"><b>${L[n]}</b><span>${q.o[oi]}</span></button>`).join('') + '</div>';
+  $('qbody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
+    const ok = +b.dataset.oi === q.c;
+    $('qbody').querySelectorAll('.opt').forEach(x=>{
+      x.disabled = true; if(+x.dataset.oi === q.c) x.classList.add('right');
+    });
+    if(!ok) b.classList.add('wrong');
+    setTimeout(()=>settle(ok, q.o[q.c]), ok ? 380 : 700);
+  }));
+}
+function renderOrder(q){
+  $('qtext').innerHTML = 'Sắp xếp thành câu đúng:';
+  const bank = shuffle(q.w.map((w,i)=>({w,i}))), picked = [], answer = q.w.join(' ');
+  $('qbody').innerHTML =
+    '<div class="slot" id="slot"></div><div class="bank" id="wbank">' +
+    bank.map(o=>`<button class="wchip" type="button" data-i="${o.i}">${o.w}</button>`).join('') +
+    '</div><button class="checkbtn" id="btnCheck" type="button" disabled>Kiểm tra</button>';
+  const sync = ()=>{
+    $('slot').innerHTML = picked.map(i=>`<button class="wchip" type="button" data-p="${i}">${q.w[i]}</button>`).join('');
+    $('slot').querySelectorAll('[data-p]').forEach(c=>c.addEventListener('click',()=>{
+      const i = +c.dataset.p; picked.splice(picked.indexOf(i),1);
+      $('wbank').querySelector(`[data-i="${i}"]`).classList.remove('used'); sync();
+    }));
+    $('btnCheck').disabled = picked.length !== q.w.length;
+  };
+  $('wbank').querySelectorAll('.wchip').forEach(c=>c.addEventListener('click',()=>{
+    c.classList.add('used'); picked.push(+c.dataset.i); sync();
+  }));
+  $('btnCheck').addEventListener('click',()=>{
+    $('btnCheck').disabled = true;
+    settle(picked.map(i=>q.w[i]).join(' ') === answer, answer);
+  });
+  sync();
+}
+function startTimer(sec){
+  clearInterval(tId);
+  const bar = $('tfill'); bar.classList.remove('low');
+  if(!S.timer){ bar.style.transition='none'; bar.style.width='100%'; return; }
+  let left = sec;
+  bar.style.transition='none'; bar.style.width='100%';
+  requestAnimationFrame(()=>{ bar.style.transition=`width ${sec}s linear`; bar.style.width='0%'; });
+  tId = setInterval(()=>{
+    if(--left <= 5) bar.classList.add('low');
+    if(left <= 0){
+      clearInterval(tId);
+      const q = curr.t.q;
+      settle(false, q.t==='order' ? q.w.join(' ') : q.o[q.c], true);
+    }
+  },1000);
+}
+
+/* ---------- CHẤM ---------- */
+function settle(ok, correctText, timeout){
+  clearInterval(tId);
+  $('ask').classList.remove('on');
+  const me = S.teams[S.turn], t = curr.t, f = $('flash');
+  if(ok){
+    me.score += 10; me.tiles++; t.taken = S.turn;
+    play('fx_run');
+    f.classList.remove('bad');
+    $('fBig').textContent = '+10 ĐIỂM';
+    $('fSub').textContent = me.name + ' mở được ô ' + t.n;
+    $('fFix').hidden = true;
+  }else{
+    t.taken = -1;
+    play('fx_out');
+    f.classList.add('bad');
+    $('fBig').textContent = 'CHƯA ĐÚNG';
+    $('fSub').textContent = timeout ? 'Hết giờ — ô ' + t.n + ' bị loại' : 'Ô ' + t.n + ' bị loại';
+    $('fFix').hidden = false;
+    $('fFix').innerHTML = 'Đáp án đúng: <span>' + esc(correctText) + '</span>';
+  }
+  refresh();
+  markFlip(curr.i);
+  f.classList.add('on');
+}
+function markFlip(i){
+  const el = document.querySelector(`.tile[data-i="${i}"]`);
+  if(el) el.classList.add('flipin');
+}
+$('flash').addEventListener('click',()=>{
+  $('flash').classList.remove('on');
+  const t = curr.t;
+  if(t.taken === S.turn && t.sur) showSurprise(t.sur);
+  else endTurn(false);
+});
+
+/* ---------- Ô BẤT NGỜ ---------- */
+function showSurprise(key){
+  const s = SUR[key], me = S.teams[S.turn], v = $('surprise');
+  v.classList.toggle('boom', key === 'bomb');
+  $('sIcon').textContent = s.icon;
+  $('sBig').textContent = s.en;
+  $('sSub').textContent = me.name + ' — ' + s.vi;
+  play(s.snd);
+  if(s.pick){
+    const others = S.teams.map((t,i)=>({t,i})).filter(x=>x.i !== S.turn);
+    $('sPick').innerHTML = '<div class="picks">' + others.map(x=>
+      `<button class="pick" type="button" data-i="${x.i}" style="--tc:${x.t.c}">${esc(x.t.name)}<small>${x.t.score} điểm</small></button>`
+    ).join('') + '</div>';
+    $('sPick').querySelectorAll('.pick').forEach(b=>b.addEventListener('click',()=>{
+      apply(key, me, S.teams[+b.dataset.i]); v.classList.remove('on'); endTurn(key==='again');
+    }));
+  }else{
+    $('sPick').innerHTML = '<button class="okbtn" id="sOk" type="button">Tiếp tục</button>';
+    $('sOk').addEventListener('click',()=>{
+      apply(key, me, null); v.classList.remove('on'); endTurn(key === 'again');
+    });
+  }
+  v.classList.add('on');
+}
+function apply(key, me, other){
+  if(key === 'x2')    me.score += 10;
+  if(key === 'bonus') me.score += 20;
+  if(key === 'bomb')  me.score = 0;
+  if(key === 'swap' && other){ const a = me.score; me.score = other.score; other.score = a; }
+  if(key === 'steal' && other){ const take = Math.min(15, other.score); other.score -= take; me.score += take; }
+  refresh();
+}
+
+/* ---------- LƯỢT ---------- */
+function endTurn(again){
+  if(!again) S.turn = (S.turn + 1) % S.nTeams;
+  S.busy = false;
+  $('turnHint').textContent = again ? '🎯 Được chọn thêm một ô!' : 'Chọn một ô số bất kỳ';
+  refresh();
+  if(S.tiles.every(t => t.taken !== null)) finish();
+}
+
+/* ---------- KẾT THÚC ---------- */
+function finish(){
+  clearInterval(tId);
+  const sorted = S.teams.slice().sort((a,b)=>b.score - a.score);
+  const top = sorted[0], tie = sorted.filter(t => t.score === top.score);
+  $('champ').textContent = tie.length > 1
+    ? 'HOÀ ' + tie.map(t=>t.name).join(' & ')
+    : top.name + ' vô địch!';
+  const medal = ['🥇','🥈','🥉','4'];
+  /* đồng điểm thì cùng hạng, cùng huy chương */
+  const rankOf = t => sorted.findIndex(x => x.score === t.score);
+  $('rank').innerHTML = sorted.map(t=>`
+    <div class="rrow ${rankOf(t)===0?'first':''}" style="--tc:${t.c}">
+      <span class="pos">${medal[rankOf(t)] ?? (rankOf(t) + 1)}</span>
+      <span class="rn">${esc(t.name)}</span>
+      <span class="rt">${t.tiles} ô</span>
+      <span class="rs">${t.score}</span>
+    </div>`).join('');
+  $('endStats').textContent = `${S.asked} câu đã hỏi · ${S.nTiles} ô · ${S.nTeams} đội`;
+  play('fx_hr');
+  show('end');
+}
+$('btnEnd').addEventListener('click', finish);
+$('btnAgain').addEventListener('click',()=> show('setup'));
+
+function show(id){
+  ['setup','game','end'].forEach(s=>$(s).classList.toggle('on', s===id));
+  $('tbSub').textContent = id==='game' ? S.nTeams + ' đội · ' + S.nTiles + ' ô' : 'Unit 1–2 · Tiếng Anh 7';
+  window.scrollTo(0,0);
+}
+
+/* ---------- CÀI ĐẶT ---------- */
+let nTeams = 4, nTiles = 24, timer = true;
+function chips(host, items, get, set, after){
+  host.innerHTML = items.map(o=>`<button class="chip" type="button" data-v="${o.v}" aria-pressed="${get()==o.v}">${o.t}</button>`).join('');
+  host.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    set(c.dataset.v);
+    host.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed', String(get()==x.dataset.v)));
+    if(after) after();
+  }));
+}
+function drawTeams(){
+  const old = [...document.querySelectorAll('#names .tin')].map(i=>i.value);
+  $('tVal').textContent = nTeams;
+  $('tMinus').disabled = nTeams <= MIN_TEAMS;
+  $('tPlus').disabled  = nTeams >= MAX_TEAMS;
+  $('sw').innerHTML = PALETTE.slice(0, nTeams)
+    .map(p=>`<span class="sw" style="--tc:${p.c}"></span>`).join('');
+  $('names').dataset.many = nTeams > 4 ? '1' : '0';
+  $('names').innerHTML = PALETTE.slice(0, nTeams).map((p,i)=>`
+    <div class="namerow"><span class="tag" style="--tc:${p.c}">${p.k}</span>
+      <input class="tin" value="${esc(old[i] ?? p.n)}" maxlength="16" aria-label="Tên ${p.n}"></div>`).join('');
+  suggestTiles();
+}
+/* gợi ý số ô cho vừa số đội: mỗi đội nên được 4-6 lượt */
+function suggestTiles(){
+  const perTeam = (nTiles / nTeams).toFixed(1).replace('.0','');
+  $('tileHint').textContent = `Mỗi đội được khoảng ${perTeam} lượt. Nên chọn 4–6 lượt/đội.`;
+}
+$('tMinus').addEventListener('click',()=>{ if(nTeams > MIN_TEAMS){ nTeams--; drawTeams(); } });
+$('tPlus') .addEventListener('click',()=>{ if(nTeams < MAX_TEAMS){ nTeams++; drawTeams(); } });
+
+chips($('nb'), [{v:12,t:'12 ô'},{v:16,t:'16 ô'},{v:20,t:'20 ô'},{v:24,t:'24 ô'},{v:30,t:'30 ô'},{v:36,t:'36 ô'}],
+      ()=>nTiles, v=>nTiles=+v, suggestTiles);
+chips($('tm'), [{v:'1',t:'Bật'},{v:'0',t:'Tắt'}], ()=>timer?'1':'0', v=>timer=(v==='1'));
+drawTeams();
+
+$('btnStart').addEventListener('click',()=>{
+  unlock();
+  const names = [...document.querySelectorAll('#names .tin')]
+    .map((inp,i)=> inp.value.trim() || PALETTE[i].n);
+  newGame(nTeams, nTiles, timer, names);
+  refresh();
+  $('turnHint').textContent = 'Chọn một ô số bất kỳ';
+  show('game');
+});
+
+/* dựng sẵn một ván mẫu để bảng không trống khi vừa mở */
+newGame(4, 24, true, PALETTE.map(p=>p.n));
+refresh();
+</script>
